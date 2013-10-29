@@ -1,0 +1,41 @@
+{
+  "name": "coffeenode-monitor",
+  "version": "0.0.1",
+  "description": "coffeenode-monitor ==================",
+  "main": "lib/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/loveencounterflow/coffeenode-monitor.git"
+  },
+  "dependencies": {
+    "coffee-script": "~1.6.3",
+    "coffeenode-types": "~0.1.0",
+    "coffeenode-trm": "~0.1.6"
+  },
+  "keywords": [
+    "coffeescript",
+    "web",
+    "server",
+    "monitor",
+    "restart"
+  ],
+  "author": "",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/loveencounterflow/coffeenode-monitor/issues"
+  },
+  "larq": {
+    "extensions": {},
+    "compile-statements": {},
+    "%cache": {
+      "routes": {
+        "lib/main.js": 1
+      }
+    }
+  },
+  "readme": "ERROR: No README data found!",
+  "_id": "coffeenode-monitor@0.0.1"
+}
