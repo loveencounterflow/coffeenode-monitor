@@ -62,17 +62,10 @@ catch error
 
 ############################################################################################################
 ### Preprocess settings: ###
-if O[ 'watch-routes' ]?
-  null
-  # for route, idx in O[ 'watch-routes' ]
-  #   O[ 'watch-routes' ][ idx ] = njs_path.join home, route
-else
+unless O[ 'watch-routes' ]?
   O[ 'watch-routes' ] = [ home, ]
 #...........................................................................................................
-if O[ 'start' ]?
-  null
-  # O[ 'start' ] = njs_path.join home, O[ 'start' ]
-else
+unless O[ 'start' ]?
   O[ 'start' ] = './lib/start.js'
 
 
@@ -89,9 +82,23 @@ for name, value of O
 start = ->
   ### TAINT: module-global state ###
   _restart_on_exit  = no
-  info 'start:', O[ 'start' ]
-  server            = njs_cp.fork O[ 'start' ]
-  # TRM.dir '©34e server', server
+  #.........................................................................................................
+  ### TAINT: ad-hoc parsing isn't very safety-proof: ###
+  start_command = O[ 'start' ].split /[ ]+/
+  switch arity = start_command.length
+    when 0
+      throw new Error "unable to parse start command: #{rpr O[ 'start' ]}"
+    when 1
+      command     = start_command[ 0 ]
+      parameters  = []
+    else
+      command     = start_command.shift()
+      parameters  = start_command
+  #.........................................................................................................
+  info 'command:   ', rpr command
+  info 'parameters:', rpr parameters
+  #.........................................................................................................
+  server            = njs_cp.fork command, parameters
   #.........................................................................................................
   server.on 'error', ( error ) ->
     alert error
@@ -132,7 +139,13 @@ restart_server = ->
 #-----------------------------------------------------------------------------------------------------------
 ### TAINT we need a solution for this: ###
 watchr_options =
+  #.........................................................................................................
   paths: O[ 'watch-routes' ]
+
+  #.........................................................................................................
+  ### TAINT: experimental, must go to options ###
+  ignoreCustomPatterns: /(\.js|\.css)$/
+
   #.........................................................................................................
   listeners:
 
