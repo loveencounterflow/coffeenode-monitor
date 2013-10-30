@@ -1,0 +1,8 @@
+
+
+{
+	"start": "./lib/start.js",
+	"watch-routes": [
+		".",
+		"node_modules/jizura-datasources" ]
+}

@@ -1,7 +1,4 @@
 
-### TAINT MONITOR shouldn't start a server when executed / required.
-This is a library, not an executable. ###
-
 
 
 
@@ -13,7 +10,14 @@ njs_cp                    = require 'child_process'
 #...........................................................................................................
 TRM                       = require 'coffeenode-trm'
 rpr                       = TRM.rpr.bind TRM
-log                       = TRM.log.bind TRM
+log_                      = TRM.log.bind TRM
+badge                     = 'cndmon'
+log                       = TRM.get_logger 'plain', badge
+info                      = TRM.get_logger 'info',  badge
+whisper                   = TRM.get_logger 'whisper',  badge
+alert                     = TRM.get_logger 'alert', badge
+warn                      = TRM.get_logger 'warn',  badge
+help                      = TRM.get_logger 'help',  badge
 echo                      = TRM.echo.bind TRM
 #...........................................................................................................
 # https://github.com/bevry/watchr
@@ -23,28 +27,83 @@ server                    = null
 server_is_running         = no
 ### TAINT: globals are bad, and so is this module-global state.keeping: ###
 _restart_on_exit          = no
-home                      = njs_path.join __dirname, '../src'
+home                      = process.cwd()
+options_route             = njs_path.join home, 'monitor-options'
+version                   = ( require '../package.json' )[ 'version' ]
+
+
+
+############################################################################################################
+### Show opening banner: ###
+log()
+log TRM.grey  '      * * * * * * * * * * * * * * * * * * '
+log TRM.steel "              CoffeeNode Monitor          "
+log TRM.steel "      the friendly file & process watcher "
+log TRM.grey  "                  (v#{version}) "
+log TRM.grey  '      * * * * * * * * * * * * * * * * * * '
+
+
+############################################################################################################
+### Load options: ###
+try
+  O = require options_route
+catch error
+  if /^Cannot find module/.test error[ 'message' ]
+    log()
+    alert "unable to load #{TRM.lime options_route}"
+    alert "please copy file", TRM.lime 'coffeenode-monitor/monitor-options.json'
+    alert "to", TRM.lime home
+    alert "and edit it to match your needs"
+    log()
+    process.exit()
+  else
+    throw error
+
+
+############################################################################################################
+### Preprocess settings: ###
+if O[ 'watch-routes' ]?
+  null
+  # for route, idx in O[ 'watch-routes' ]
+  #   O[ 'watch-routes' ][ idx ] = njs_path.join home, route
+else
+  O[ 'watch-routes' ] = [ home, ]
+#...........................................................................................................
+if O[ 'start' ]?
+  null
+  # O[ 'start' ] = njs_path.join home, O[ 'start' ]
+else
+  O[ 'start' ] = './lib/start.js'
+
+
+############################################################################################################
+### Report settings: ###
+log()
+for name, value of O
+  log ( TRM.grey 'setting' ), ( TRM.gold "#{name}:" ), ( TRM.lime rpr value )
+
 
 #===========================================================================================================
 # SERVER METHODS
 #-----------------------------------------------------------------------------------------------------------
-start_server = ->
-  ### TAINT: module-globale state ###
+start = ->
+  ### TAINT: module-global state ###
   _restart_on_exit  = no
-  server            = njs_cp.fork './lib/start.js'
+  info 'start:', O[ 'start' ]
+  server            = njs_cp.fork O[ 'start' ]
   # TRM.dir '©34e server', server
   #.........................................................................................................
   server.on 'error', ( error ) ->
-    log TRM.red error
+    alert error
   #.........................................................................................................
   server.on 'close', ( code, signal ) ->
     server_is_running = no
     if code?
-      log TRM.red "process with PID #{server[ 'pid' ]} received signal ##{code}"
+      warn "process with PID #{server[ 'pid' ]} received signal ##{code}"
     if _restart_on_exit
-      start_server()
+      start()
     else
-      log TRM.gold "awaiting code change"
+      help "process will be restarted on code change"
   #.........................................................................................................
   server_is_running = yes
 
@@ -52,10 +111,10 @@ start_server = ->
 
 #-----------------------------------------------------------------------------------------------------------
 stop_server = ( restart_on_exit = no ) ->
-  ### TAINT: module-globale state ###
+  ### TAINT: module-global state ###
   _restart_on_exit = restart_on_exit
   if server_is_running
-    log TRM.red "stopping process with PID #{server.pid}"
+    info "stopping process with PID #{server.pid}"
     server.kill 'SIGTERM'
   else
     # log TRM.red "server with PID #{server.pid} already shutdown"
@@ -72,9 +131,8 @@ restart_server = ->
 # FILE WATCHER
 #-----------------------------------------------------------------------------------------------------------
 ### TAINT we need a solution for this: ###
-home_of_jzrds = njs_path.join ( njs_path.dirname require.resolve 'jizura-datasources' ), '..'
 watchr_options =
-  paths: [ home, home_of_jzrds, ]
+  paths: O[ 'watch-routes' ]
   #.........................................................................................................
   listeners:
 
@@ -84,25 +142,25 @@ watchr_options =
 
     #.......................................................................................................
     change: ( type, route, current_stat, previous_stat ) ->
-      log TRM.gold "change:", route
+      info "change:", route
       restart_server()
 
     #.......................................................................................................
     watching: ( error, watchers ) ->
       throw error if error?
+      log()
       for filename, watcher of watchers[ 'children' ]
-        log TRM.grey "watching #{watcher[ 'path' ]}"
+        whisper "watching #{watcher[ 'path' ]}"
 
 
-############################################################################################################
-log TRM.pink watchr_options
+# ############################################################################################################
+# log TRM.pink watchr_options
 watchr.watch watchr_options
-start_server()
+start()
 
 
-
-
-
+# log TRM.pink process.argv
+# log TRM.green process.cwd()
 
 
 
