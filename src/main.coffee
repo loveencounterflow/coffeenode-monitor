@@ -12,12 +12,13 @@ TRM                       = require 'coffeenode-trm'
 rpr                       = TRM.rpr.bind TRM
 log_                      = TRM.log.bind TRM
 badge                     = 'cndmon'
-log                       = TRM.get_logger 'plain', badge
-info                      = TRM.get_logger 'info',  badge
-whisper                   = TRM.get_logger 'whisper',  badge
-alert                     = TRM.get_logger 'alert', badge
-warn                      = TRM.get_logger 'warn',  badge
-help                      = TRM.get_logger 'help',  badge
+log                       = TRM.get_logger 'plain',   badge
+info                      = TRM.get_logger 'info',    badge
+whisper                   = TRM.get_logger 'whisper', badge
+debug                     = TRM.get_logger 'debug',   badge
+alert                     = TRM.get_logger 'alert',   badge
+warn                      = TRM.get_logger 'warn',    badge
+help                      = TRM.get_logger 'help',    badge
 echo                      = TRM.echo.bind TRM
 #...........................................................................................................
 # https://github.com/bevry/watchr
@@ -25,7 +26,7 @@ watchr                    = require 'watchr'
 #...........................................................................................................
 server                    = null
 server_is_running         = no
-### TAINT: globals are bad, and so is this module-global state.keeping: ###
+### TAINT: globals are bad, and so is the module-global state-keeping below: ###
 _restart_on_exit          = no
 home                      = process.cwd()
 options_route             = njs_path.join home, 'monitor-options'
@@ -45,6 +46,7 @@ log TRM.grey  '      * * * * * * * * * * * * * * * * * * '
 
 ############################################################################################################
 ### Load options: ###
+info "loading configuration settings from", TRM.lime options_route
 try
   O = require options_route
 catch error
@@ -80,6 +82,23 @@ for name, value of O
 # SERVER METHODS
 #-----------------------------------------------------------------------------------------------------------
 start = ->
+  #.........................................................................................................
+  if O[ 'on-change' ]? and O[ 'on-change' ].length > 0
+    info "executing #{rpr O[ 'on-change' ]}"
+    njs_cp.exec O[ 'on-change' ], ( error, stdout, stderr ) ->
+      throw error if error?
+      throw new Error stderr if stderr? and stderr.length isnt 0
+      for line in stdout.split '\n'
+        info line if line.length isnt 0
+      _start()
+  #.........................................................................................................
+  else
+    _start()
+  #.........................................................................................................
+  return null
+
+#-----------------------------------------------------------------------------------------------------------
+_start = ->
   ### TAINT: module-global state ###
   _restart_on_exit  = no
   #.........................................................................................................

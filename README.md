@@ -1,3 +1,10 @@
+
+
+- [coffeenode-monitor](#coffeenode-monitor)
+
+> **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+
 coffeenode-monitor
 ==================
 
