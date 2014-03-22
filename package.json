@@ -1,6 +1,6 @@
 {
   "name": "coffeenode-monitor",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "coffeenode-monitor ==================",
   "main": "lib/main.js",
   "scripts": {
