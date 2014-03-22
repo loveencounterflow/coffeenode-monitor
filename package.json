@@ -11,7 +11,7 @@
     "url": "https://github.com/loveencounterflow/coffeenode-monitor.git"
   },
   "dependencies": {
-    "coffee-script": "~1.6.3",
+    "coffee-script": "~1.7.1",
     "coffeenode-types": "~0.1.0",
     "coffeenode-trm": "~0.1.6"
   },
@@ -37,5 +37,5 @@
     }
   },
   "readme": "ERROR: No README data found!",
-  "_id": "coffeenode-monitor@0.0.1"
+  "_id": "coffeenode-monitor@0.0.2"
 }
